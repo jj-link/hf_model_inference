@@ -10,7 +10,7 @@ import os
 import sys
 import time
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM, TextStreamer
+from transformers import AutoTokenizer, AutoModelForCausalLM, TextStreamer, BitsAndBytesConfig
 
 def main():
     parser = argparse.ArgumentParser(
@@ -73,9 +73,9 @@ Examples:
     
     parser.add_argument(
         "--gpu",
-        type=int,
-        default=0,
-        help="GPU device index to use (default: 0)"
+        type=str,
+        default="0",
+        help="GPU device(s) to use. Single GPU: '0' or '1'. Multiple GPUs: '0,1' (default: '0')"
     )
     
     parser.add_argument(
@@ -115,25 +115,43 @@ Examples:
     if args.cpu:
         device = "cpu"
         dtype = torch.float32
+        gpu_ids = []
         print("Using CPU")
     elif torch.cuda.is_available():
-        # Validate GPU index
+        # Parse GPU specification
         gpu_count = torch.cuda.device_count()
-        if args.gpu >= gpu_count:
-            print(f"⚠️  GPU {args.gpu} not available (only {gpu_count} GPU(s) detected)")
-            print("   Falling back to GPU 0")
-            args.gpu = 0
+        try:
+            gpu_ids = [int(g.strip()) for g in args.gpu.split(',')]
+        except ValueError:
+            print(f"❌ Error: Invalid GPU specification '{args.gpu}'. Use single index (e.g., '0') or comma-separated (e.g., '0,1')")
+            sys.exit(1)
         
-        device = f"cuda:{args.gpu}"
+        # Validate GPU indices
+        invalid_gpus = [g for g in gpu_ids if g >= gpu_count]
+        if invalid_gpus:
+            print(f"⚠️  GPU(s) {invalid_gpus} not available (only {gpu_count} GPU(s) detected)")
+            print("   Falling back to GPU 0")
+            gpu_ids = [0]
+        
+        # Set primary device
+        device = f"cuda:{gpu_ids[0]}"
         dtype = torch.float32 if args.fp32 else torch.float16
-        print(f"✅ Using GPU {args.gpu}: {torch.cuda.get_device_name(args.gpu)}")
-        print(f"   VRAM Available: {torch.cuda.get_device_properties(args.gpu).total_memory / 1024**3:.2f} GB")
+        
+        # Display GPU info
+        if len(gpu_ids) == 1:
+            print(f"✅ Using GPU {gpu_ids[0]}: {torch.cuda.get_device_name(gpu_ids[0])}")
+            print(f"   VRAM Available: {torch.cuda.get_device_properties(gpu_ids[0]).total_memory / 1024**3:.2f} GB")
+        else:
+            print(f"✅ Using GPUs: {gpu_ids}")
+            for gpu_id in gpu_ids:
+                print(f"   GPU {gpu_id}: {torch.cuda.get_device_name(gpu_id)} ({torch.cuda.get_device_properties(gpu_id).total_memory / 1024**3:.2f} GB)")
         
         if args.quantize:
             print(f"   Quantization: {args.quantize}")
     else:
         device = "cpu"
         dtype = torch.float32
+        gpu_ids = []
         print("⚠️  CUDA not available, using CPU")
     
     # Determine if model_id is a local path
@@ -165,15 +183,30 @@ Examples:
     
     # Handle quantization or standard loading
     if args.quantize == "int8":
-        model_kwargs["load_in_8bit"] = True
-        model_kwargs["device_map"] = "auto"
+        quantization_config = BitsAndBytesConfig(load_in_8bit=True)
+        model_kwargs["quantization_config"] = quantization_config
+        # Use specific GPU(s) or auto for multi-GPU
+        if len(gpu_ids) == 1:
+            model_kwargs["device_map"] = {"":  device}
+        else:
+            model_kwargs["device_map"] = "auto"
     elif args.quantize == "int4":
-        model_kwargs["load_in_4bit"] = True
-        model_kwargs["device_map"] = "auto"
+        quantization_config = BitsAndBytesConfig(load_in_4bit=True)
+        model_kwargs["quantization_config"] = quantization_config
+        # Use specific GPU(s) or auto for multi-GPU
+        if len(gpu_ids) == 1:
+            model_kwargs["device_map"] = {"":  device}
+        else:
+            model_kwargs["device_map"] = "auto"
     else:
         # Standard loading without quantization
         model_kwargs["torch_dtype"] = dtype
-        model_kwargs["device_map"] = "auto" if device.startswith("cuda") else None
+        if len(gpu_ids) == 1:
+            model_kwargs["device_map"] = {"":  device}
+        elif len(gpu_ids) > 1:
+            model_kwargs["device_map"] = "auto"
+        else:
+            model_kwargs["device_map"] = None
     
     try:
         model = AutoModelForCausalLM.from_pretrained(

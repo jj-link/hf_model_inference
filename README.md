@@ -59,7 +59,11 @@ python run_hf_model.py "C:\path\to\your\local\model"
 
 **Use specific GPU**:
 ```powershell
+# Single GPU (GPU 1)
 python run_hf_model.py gpt2 --gpu 1
+
+# Multiple GPUs (distribute model across GPU 0 and 1)
+python run_hf_model.py gpt2 --gpu 0,1
 ```
 
 **Load large models with quantization** (reduces VRAM usage):
@@ -85,7 +89,7 @@ python run_hf_model.py huihui-ai/Qwen2.5-32B-Instruct-abliterated --quantize int
 
 ### Device & Performance
 - `--cpu` - Force CPU usage (default: use CUDA if available)
-- `--gpu` - GPU device index to use (default: 0)
+- `--gpu` - GPU device(s) to use. Single GPU: `0` or `1`. Multiple GPUs: `0,1` (default: `0`)
 - `--fp32` - Use FP32 instead of FP16 (default: FP16 on GPU)
 - `--quantize {int4,int8}` - Quantize model to reduce VRAM usage (requires bitsandbytes)
 

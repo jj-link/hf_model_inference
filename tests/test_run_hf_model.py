@@ -120,7 +120,7 @@ def build_fake_modules(cuda_available=False, tokenizer_error=False, model_error=
             _ = model_id
             # Filter out parameters not relevant for test comparisons
             cls.last_kwargs = {k: v for k, v in kwargs.items() 
-                             if k not in ['local_files_only', 'load_in_8bit', 'load_in_4bit']}
+                             if k not in ['local_files_only', 'load_in_8bit', 'load_in_4bit', 'quantization_config']}
             if model_error:
                 raise RuntimeError("model error")
             model = FakeModel()
@@ -137,10 +137,16 @@ def build_fake_modules(cuda_available=False, tokenizer_error=False, model_error=
                 "skip_special_tokens": skip_special_tokens,
             }
 
+    class FakeBitsAndBytesConfig:
+        def __init__(self, load_in_8bit=False, load_in_4bit=False, **kwargs):
+            self.load_in_8bit = load_in_8bit
+            self.load_in_4bit = load_in_4bit
+
     fake_transformers = types.SimpleNamespace(
         AutoTokenizer=FakeAutoTokenizer,
         AutoModelForCausalLM=FakeAutoModel,
         TextStreamer=FakeTextStreamer,
+        BitsAndBytesConfig=FakeBitsAndBytesConfig,
     )
 
     return fake_torch, fake_transformers
@@ -226,9 +232,10 @@ class RunHfModelTests(unittest.TestCase):
             fake_transformers.AutoModelForCausalLM.last_kwargs["torch_dtype"],
             fake_torch.float32,
         )
+        # Single GPU now uses specific device map instead of "auto"
         self.assertEqual(
             fake_transformers.AutoModelForCausalLM.last_kwargs["device_map"],
-            "auto",
+            {"": "cuda:0"},
         )
 
     def test_cuda_fp16_default_dtype(self):
@@ -329,10 +336,21 @@ class RunHfModelTests(unittest.TestCase):
                 del sys.modules["run_hf_model"]
             module = importlib.import_module("run_hf_model")
             out, _ = self.run_main(module, ["gpt2", "--gpu", "5", "--prompt", "hello world"])
-        self.assertIn("GPU 5 not available", out)
+        self.assertIn("GPU(s) [5] not available", out)
         self.assertIn("only 2 GPU(s) detected", out)
         self.assertIn("Falling back to GPU 0", out)
         self.assertIn("Using GPU 0", out)
+
+    def test_gpu_selection_multi_gpu(self):
+        fake_torch, _fake_transformers, patches = self.load_module(cuda_available=True, device_count=2)
+        with patches:
+            if "run_hf_model" in sys.modules:
+                del sys.modules["run_hf_model"]
+            module = importlib.import_module("run_hf_model")
+            out, _ = self.run_main(module, ["gpt2", "--gpu", "0,1", "--prompt", "hello world"])
+        self.assertIn("Using GPUs: [0, 1]", out)
+        self.assertIn("GPU 0: Fake GPU 0", out)
+        self.assertIn("GPU 1: Fake GPU 1", out)
 
     def test_quantization_int8_shows_message(self):
         _fake_torch, _fake_transformers, patches = self.load_module(cuda_available=True)
