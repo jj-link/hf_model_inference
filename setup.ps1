@@ -250,6 +250,19 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "✅ Dependencies installed" -ForegroundColor Green
 Write-Host ""
 
+# Install bitsandbytes for quantization support (CUDA only)
+if ($useCuda) {
+    Write-Host "Installing bitsandbytes for quantization support..." -ForegroundColor Yellow
+    pip install bitsandbytes
+    
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "⚠️  Failed to install bitsandbytes (quantization features will not be available)" -ForegroundColor Yellow
+    } else {
+        Write-Host "✅ bitsandbytes installed (8-bit and 4-bit quantization enabled)" -ForegroundColor Green
+    }
+    Write-Host ""
+}
+
 # Verify installation
 Write-Host "Verifying installation..." -ForegroundColor Yellow
 & python -c "import torch; print(f'PyTorch version: {torch.__version__}'); print(f'CUDA available: {torch.cuda.is_available()}')"
