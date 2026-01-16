@@ -85,6 +85,18 @@ Examples:
     )
     
     parser.add_argument(
+        "--load-in-8bit",
+        action="store_true",
+        help="Load model in 8-bit quantization (requires bitsandbytes, reduces VRAM usage)"
+    )
+    
+    parser.add_argument(
+        "--load-in-4bit",
+        action="store_true",
+        help="Load model in 4-bit quantization (requires bitsandbytes, maximum VRAM reduction)"
+    )
+    
+    parser.add_argument(
         "--no-stream",
         action="store_true",
         help="Disable streaming output (default: stream tokens in real-time)"
@@ -97,6 +109,15 @@ Examples:
     )
     
     args = parser.parse_args()
+    
+    # Validate quantization arguments
+    if args.load_in_8bit and args.load_in_4bit:
+        print("❌ Error: Cannot use both --load-in-8bit and --load-in-4bit simultaneously")
+        sys.exit(1)
+    
+    if (args.load_in_8bit or args.load_in_4bit) and args.cpu:
+        print("❌ Error: Quantization requires GPU, cannot use with --cpu")
+        sys.exit(1)
     
     # Device setup
     if args.cpu:
@@ -115,6 +136,11 @@ Examples:
         dtype = torch.float32 if args.fp32 else torch.float16
         print(f"✅ Using GPU {args.gpu}: {torch.cuda.get_device_name(args.gpu)}")
         print(f"   VRAM Available: {torch.cuda.get_device_properties(args.gpu).total_memory / 1024**3:.2f} GB")
+        
+        if args.load_in_8bit:
+            print("   Quantization: 8-bit")
+        elif args.load_in_4bit:
+            print("   Quantization: 4-bit")
     else:
         device = "cpu"
         dtype = torch.float32
@@ -140,13 +166,29 @@ Examples:
     print(f"Loading model '{model_path}'...")
     if not is_local_path:
         print("(First run will download the model, this may take a while...)")
+    
+    # Prepare model loading kwargs
+    model_kwargs = {
+        "low_cpu_mem_usage": True,
+        "local_files_only": is_local_path,
+    }
+    
+    # Handle quantization or standard loading
+    if args.load_in_8bit:
+        model_kwargs["load_in_8bit"] = True
+        model_kwargs["device_map"] = "auto"
+    elif args.load_in_4bit:
+        model_kwargs["load_in_4bit"] = True
+        model_kwargs["device_map"] = "auto"
+    else:
+        # Standard loading without quantization
+        model_kwargs["torch_dtype"] = dtype
+        model_kwargs["device_map"] = "auto" if device.startswith("cuda") else None
+    
     try:
         model = AutoModelForCausalLM.from_pretrained(
             model_path,
-            torch_dtype=dtype,
-            low_cpu_mem_usage=True,
-            device_map="auto" if device.startswith("cuda") else None,
-            local_files_only=is_local_path
+            **model_kwargs
         )
         if device == "cpu":
             model = model.to(device)

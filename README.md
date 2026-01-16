@@ -52,16 +52,47 @@ python run_hf_model.py microsoft/phi-2
 python run_hf_model.py meta-llama/Llama-2-7b-chat-hf
 ```
 
+**Load local models**:
+```powershell
+python run_hf_model.py "C:\path\to\your\local\model"
+```
+
+**Use specific GPU**:
+```powershell
+python run_hf_model.py gpt2 --gpu 1
+```
+
+**Load large models with quantization** (reduces VRAM usage):
+```powershell
+# 8-bit quantization (~50% VRAM reduction)
+python run_hf_model.py huihui-ai/Qwen2.5-32B-Instruct-abliterated --load-in-8bit
+
+# 4-bit quantization (~75% VRAM reduction)
+python run_hf_model.py huihui-ai/Qwen2.5-32B-Instruct-abliterated --load-in-4bit
+```
+
 ## Command-Line Options
 
-- `model_id` - HuggingFace model ID (required)
-- `-p, --prompt` - Single prompt to generate from
+### Required
+- `model_id` - HuggingFace model ID or local path to model directory
+
+### Generation Parameters
+- `-p, --prompt` - Single prompt to generate from (interactive mode if not provided)
 - `-m, --max-tokens` - Maximum tokens to generate (default: 200)
 - `-t, --temperature` - Sampling temperature (default: 0.7)
 - `--top-p` - Top-p nucleus sampling (default: 0.9)
 - `--repetition-penalty` - Repetition penalty (default: 1.1)
-- `--cpu` - Force CPU usage
-- `--fp32` - Use FP32 instead of FP16
+
+### Device & Performance
+- `--cpu` - Force CPU usage (default: use CUDA if available)
+- `--gpu` - GPU device index to use (default: 0)
+- `--fp32` - Use FP32 instead of FP16 (default: FP16 on GPU)
+- `--load-in-8bit` - Load model in 8-bit quantization (requires bitsandbytes)
+- `--load-in-4bit` - Load model in 4-bit quantization (requires bitsandbytes)
+
+### Output
+- `--no-stream` - Disable streaming output (default: stream tokens in real-time)
+- `--verbose` - Show detailed timing and token statistics
 
 ## Manual Setup
 
@@ -83,8 +114,27 @@ pip install transformers accelerate huggingface_hub
 
 - Python 3.8+
 - NVIDIA GPU with CUDA support (optional, will use CPU if not available)
-- ~3-4GB VRAM for small models like TimeCapsuleLLM (1.2B parameters)
+- For quantization support: `pip install bitsandbytes`
+
+### VRAM Requirements
+
+**Without Quantization:**
+- ~3-4GB VRAM for 1-2B parameter models
 - ~8-16GB VRAM for 7B parameter models
+- ~28-32GB VRAM for 14B parameter models
+- ~60-70GB VRAM for 32B parameter models
+
+**With 8-bit Quantization (~50% reduction):**
+- ~2GB VRAM for 1-2B parameter models
+- ~4-8GB VRAM for 7B parameter models
+- ~14-16GB VRAM for 14B parameter models
+- ~30-35GB VRAM for 32B parameter models
+
+**With 4-bit Quantization (~75% reduction):**
+- ~1GB VRAM for 1-2B parameter models
+- ~2-4GB VRAM for 7B parameter models
+- ~7-8GB VRAM for 14B parameter models
+- ~15-18GB VRAM for 32B parameter models
 
 ## Files
 

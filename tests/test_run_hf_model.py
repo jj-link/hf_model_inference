@@ -118,8 +118,9 @@ def build_fake_modules(cuda_available=False, tokenizer_error=False, model_error=
         @classmethod
         def from_pretrained(cls, model_id, **kwargs):
             _ = model_id
-            # Filter out local_files_only for comparison in tests
-            cls.last_kwargs = {k: v for k, v in kwargs.items() if k != 'local_files_only'}
+            # Filter out parameters not relevant for test comparisons
+            cls.last_kwargs = {k: v for k, v in kwargs.items() 
+                             if k not in ['local_files_only', 'load_in_8bit', 'load_in_4bit']}
             if model_error:
                 raise RuntimeError("model error")
             model = FakeModel()
@@ -332,6 +333,52 @@ class RunHfModelTests(unittest.TestCase):
         self.assertIn("only 2 GPU(s) detected", out)
         self.assertIn("Falling back to GPU 0", out)
         self.assertIn("Using GPU 0", out)
+
+    def test_quantization_8bit_shows_message(self):
+        _fake_torch, _fake_transformers, patches = self.load_module(cuda_available=True)
+        with patches:
+            if "run_hf_model" in sys.modules:
+                del sys.modules["run_hf_model"]
+            module = importlib.import_module("run_hf_model")
+            out, _ = self.run_main(module, ["gpt2", "--load-in-8bit", "--prompt", "hello world"])
+        self.assertIn("Quantization: 8-bit", out)
+
+    def test_quantization_4bit_shows_message(self):
+        _fake_torch, _fake_transformers, patches = self.load_module(cuda_available=True)
+        with patches:
+            if "run_hf_model" in sys.modules:
+                del sys.modules["run_hf_model"]
+            module = importlib.import_module("run_hf_model")
+            out, _ = self.run_main(module, ["gpt2", "--load-in-4bit", "--prompt", "hello world"])
+        self.assertIn("Quantization: 4-bit", out)
+
+    def test_quantization_both_flags_error(self):
+        _fake_torch, _fake_transformers, patches = self.load_module(cuda_available=True)
+        with patches:
+            if "run_hf_model" in sys.modules:
+                del sys.modules["run_hf_model"]
+            module = importlib.import_module("run_hf_model")
+            out, exc = self.run_main(
+                module,
+                ["gpt2", "--load-in-8bit", "--load-in-4bit", "--prompt", "hello world"],
+                expect_exit=True,
+            )
+        self.assertEqual(exc.code, 1)
+        self.assertIn("Cannot use both --load-in-8bit and --load-in-4bit", out)
+
+    def test_quantization_with_cpu_error(self):
+        _fake_torch, _fake_transformers, patches = self.load_module(cuda_available=True)
+        with patches:
+            if "run_hf_model" in sys.modules:
+                del sys.modules["run_hf_model"]
+            module = importlib.import_module("run_hf_model")
+            out, exc = self.run_main(
+                module,
+                ["gpt2", "--cpu", "--load-in-8bit", "--prompt", "hello world"],
+                expect_exit=True,
+            )
+        self.assertEqual(exc.code, 1)
+        self.assertIn("Quantization requires GPU", out)
 
 
 if __name__ == "__main__":
