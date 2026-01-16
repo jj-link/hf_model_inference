@@ -38,7 +38,13 @@ def generate(prompt, args, tokenizer, model, device, streamer, show_prompt_in_ou
             pad_token_id=tokenizer.eos_token_id if tokenizer.pad_token_id is None else tokenizer.pad_token_id,
             streamer=streamer,
             tokenizer=tokenizer,
-            stop_strings=["\nUser:", "\nHuman:", "\nAssistant:", "\n###", "<|im_end|>", "</s>"],
+            stop_strings=[
+                "\nUser:", "\nHuman:", "\nAssistant:",
+                ".User:", ".Human:", ".Assistant:",
+                "!User:", "!Human:", "!Assistant:",
+                "?User:", "?Human:", "?Assistant:",
+                "<|im_end|>", "</s>"
+            ],
         )
 
     gen_end = time.time()
