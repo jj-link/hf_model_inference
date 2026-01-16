@@ -85,15 +85,11 @@ Examples:
     )
     
     parser.add_argument(
-        "--load-in-8bit",
-        action="store_true",
-        help="Load model in 8-bit quantization (requires bitsandbytes, reduces VRAM usage)"
-    )
-    
-    parser.add_argument(
-        "--load-in-4bit",
-        action="store_true",
-        help="Load model in 4-bit quantization (requires bitsandbytes, maximum VRAM reduction)"
+        "--quantize",
+        type=str,
+        choices=["int4", "int8"],
+        default=None,
+        help="Quantize model to reduce VRAM usage (requires bitsandbytes). Options: int4 (~75%% reduction), int8 (~50%% reduction)"
     )
     
     parser.add_argument(
@@ -111,11 +107,7 @@ Examples:
     args = parser.parse_args()
     
     # Validate quantization arguments
-    if args.load_in_8bit and args.load_in_4bit:
-        print("❌ Error: Cannot use both --load-in-8bit and --load-in-4bit simultaneously")
-        sys.exit(1)
-    
-    if (args.load_in_8bit or args.load_in_4bit) and args.cpu:
+    if args.quantize and args.cpu:
         print("❌ Error: Quantization requires GPU, cannot use with --cpu")
         sys.exit(1)
     
@@ -137,10 +129,8 @@ Examples:
         print(f"✅ Using GPU {args.gpu}: {torch.cuda.get_device_name(args.gpu)}")
         print(f"   VRAM Available: {torch.cuda.get_device_properties(args.gpu).total_memory / 1024**3:.2f} GB")
         
-        if args.load_in_8bit:
-            print("   Quantization: 8-bit")
-        elif args.load_in_4bit:
-            print("   Quantization: 4-bit")
+        if args.quantize:
+            print(f"   Quantization: {args.quantize}")
     else:
         device = "cpu"
         dtype = torch.float32
@@ -174,10 +164,10 @@ Examples:
     }
     
     # Handle quantization or standard loading
-    if args.load_in_8bit:
+    if args.quantize == "int8":
         model_kwargs["load_in_8bit"] = True
         model_kwargs["device_map"] = "auto"
-    elif args.load_in_4bit:
+    elif args.quantize == "int4":
         model_kwargs["load_in_4bit"] = True
         model_kwargs["device_map"] = "auto"
     else:

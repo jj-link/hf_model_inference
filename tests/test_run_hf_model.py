@@ -334,37 +334,23 @@ class RunHfModelTests(unittest.TestCase):
         self.assertIn("Falling back to GPU 0", out)
         self.assertIn("Using GPU 0", out)
 
-    def test_quantization_8bit_shows_message(self):
+    def test_quantization_int8_shows_message(self):
         _fake_torch, _fake_transformers, patches = self.load_module(cuda_available=True)
         with patches:
             if "run_hf_model" in sys.modules:
                 del sys.modules["run_hf_model"]
             module = importlib.import_module("run_hf_model")
-            out, _ = self.run_main(module, ["gpt2", "--load-in-8bit", "--prompt", "hello world"])
-        self.assertIn("Quantization: 8-bit", out)
+            out, _ = self.run_main(module, ["gpt2", "--quantize", "int8", "--prompt", "hello world"])
+        self.assertIn("Quantization: int8", out)
 
-    def test_quantization_4bit_shows_message(self):
+    def test_quantization_int4_shows_message(self):
         _fake_torch, _fake_transformers, patches = self.load_module(cuda_available=True)
         with patches:
             if "run_hf_model" in sys.modules:
                 del sys.modules["run_hf_model"]
             module = importlib.import_module("run_hf_model")
-            out, _ = self.run_main(module, ["gpt2", "--load-in-4bit", "--prompt", "hello world"])
-        self.assertIn("Quantization: 4-bit", out)
-
-    def test_quantization_both_flags_error(self):
-        _fake_torch, _fake_transformers, patches = self.load_module(cuda_available=True)
-        with patches:
-            if "run_hf_model" in sys.modules:
-                del sys.modules["run_hf_model"]
-            module = importlib.import_module("run_hf_model")
-            out, exc = self.run_main(
-                module,
-                ["gpt2", "--load-in-8bit", "--load-in-4bit", "--prompt", "hello world"],
-                expect_exit=True,
-            )
-        self.assertEqual(exc.code, 1)
-        self.assertIn("Cannot use both --load-in-8bit and --load-in-4bit", out)
+            out, _ = self.run_main(module, ["gpt2", "--quantize", "int4", "--prompt", "hello world"])
+        self.assertIn("Quantization: int4", out)
 
     def test_quantization_with_cpu_error(self):
         _fake_torch, _fake_transformers, patches = self.load_module(cuda_available=True)
@@ -374,7 +360,7 @@ class RunHfModelTests(unittest.TestCase):
             module = importlib.import_module("run_hf_model")
             out, exc = self.run_main(
                 module,
-                ["gpt2", "--cpu", "--load-in-8bit", "--prompt", "hello world"],
+                ["gpt2", "--cpu", "--quantize", "int8", "--prompt", "hello world"],
                 expect_exit=True,
             )
         self.assertEqual(exc.code, 1)

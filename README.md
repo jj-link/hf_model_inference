@@ -65,10 +65,10 @@ python run_hf_model.py gpt2 --gpu 1
 **Load large models with quantization** (reduces VRAM usage):
 ```powershell
 # 8-bit quantization (~50% VRAM reduction)
-python run_hf_model.py huihui-ai/Qwen2.5-32B-Instruct-abliterated --load-in-8bit
+python run_hf_model.py huihui-ai/Qwen2.5-32B-Instruct-abliterated --quantize int8
 
 # 4-bit quantization (~75% VRAM reduction)
-python run_hf_model.py huihui-ai/Qwen2.5-32B-Instruct-abliterated --load-in-4bit
+python run_hf_model.py huihui-ai/Qwen2.5-32B-Instruct-abliterated --quantize int4
 ```
 
 ## Command-Line Options
@@ -87,8 +87,7 @@ python run_hf_model.py huihui-ai/Qwen2.5-32B-Instruct-abliterated --load-in-4bit
 - `--cpu` - Force CPU usage (default: use CUDA if available)
 - `--gpu` - GPU device index to use (default: 0)
 - `--fp32` - Use FP32 instead of FP16 (default: FP16 on GPU)
-- `--load-in-8bit` - Load model in 8-bit quantization (requires bitsandbytes)
-- `--load-in-4bit` - Load model in 4-bit quantization (requires bitsandbytes)
+- `--quantize {int4,int8}` - Quantize model to reduce VRAM usage (requires bitsandbytes)
 
 ### Output
 - `--no-stream` - Disable streaming output (default: stream tokens in real-time)
