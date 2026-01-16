@@ -239,29 +239,22 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "✅ PyTorch installed" -ForegroundColor Green
 Write-Host ""
 
-# Install Transformers and dependencies
-Write-Host "Installing Transformers and dependencies..." -ForegroundColor Yellow
-pip install transformers accelerate huggingface_hub
+# Install dependencies from requirements.txt
+Write-Host "Installing dependencies from requirements.txt..." -ForegroundColor Yellow
+
+if (-not $useCuda) {
+    Write-Host "⚠️  Note: bitsandbytes requires CUDA and may fail on CPU-only systems" -ForegroundColor Yellow
+}
+
+pip install -r requirements.txt
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "❌ Failed to install dependencies" -ForegroundColor Red
     exit 1
 }
+
 Write-Host "✅ Dependencies installed" -ForegroundColor Green
 Write-Host ""
-
-# Install bitsandbytes for quantization support (CUDA only)
-if ($useCuda) {
-    Write-Host "Installing bitsandbytes for quantization support..." -ForegroundColor Yellow
-    pip install bitsandbytes
-    
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "⚠️  Failed to install bitsandbytes (quantization features will not be available)" -ForegroundColor Yellow
-    } else {
-        Write-Host "✅ bitsandbytes installed (8-bit and 4-bit quantization enabled)" -ForegroundColor Green
-    }
-    Write-Host ""
-}
 
 # Verify installation
 Write-Host "Verifying installation..." -ForegroundColor Yellow
