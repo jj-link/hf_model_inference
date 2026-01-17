@@ -21,6 +21,11 @@ class FilteredTextStreamer(TextStreamer):
         self.text_buffer = ""
         self.stopped = False
     
+    def reset(self):
+        """Reset the streamer state for a new generation."""
+        self.text_buffer = ""
+        self.stopped = False
+    
     def on_finalized_text(self, text: str, stream_end: bool = False):
         """Override to check for stop strings before printing."""
         if self.stopped:
@@ -50,6 +55,10 @@ def make_streamer(tokenizer, no_stream):
 
 def generate(prompt, args, tokenizer, model, device, streamer, show_prompt_in_output=False):
     stats = {}
+
+    # Reset streamer state for new generation
+    if streamer is not None and hasattr(streamer, 'reset'):
+        streamer.reset()
 
     total_start = time.time()
 
