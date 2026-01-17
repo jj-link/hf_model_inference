@@ -16,6 +16,7 @@ class FilteredTextStreamer(TextStreamer):
             "?User:", "?Human:", "?Assistant:",
             " User:", " Human:", " Assistant:",
             "User:", "Human:", "Assistant:",
+            "\n---\n", "\n---",
         ]
         self.text_buffer = ""
         self.stopped = False
@@ -82,6 +83,7 @@ def generate(prompt, args, tokenizer, model, device, streamer, show_prompt_in_ou
                 "?User:", "?Human:", "?Assistant:",
                 " User:", " Human:", " Assistant:",
                 "User:", "Human:", "Assistant:",
+                "\n---\n", "\n---",
                 "<|im_end|>", "</s>"
             ],
         )
@@ -113,6 +115,7 @@ def generate(prompt, args, tokenizer, model, device, streamer, show_prompt_in_ou
             "?User:", "?Human:", "?Assistant:",
             " User:", " Human:", " Assistant:",
             "User:", "Human:", "Assistant:",
+            "\n---\n", "\n---",
         ]
         for stop_str in stop_strings:
             if stop_str in result:
