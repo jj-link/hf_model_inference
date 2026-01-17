@@ -31,7 +31,7 @@ Examples:
         "-m",
         "--max-tokens",
         type=int,
-        default=500,
+        default=1000,
         help="Maximum number of tokens to generate (default: 200)",
     )
 

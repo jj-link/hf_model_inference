@@ -57,26 +57,29 @@ def main():
                 continue
 
             print("\n" + "-" * 70)
-            if args.no_stream:
-                result, stats = generate(
-                    prompt, args, tokenizer, model, device, streamer, show_prompt_in_output=True
-                )
-                print(f"GENERATION:\n{result}")
-            else:
-                print("GENERATION:")
-                result, stats = generate(prompt, args, tokenizer, model, device, streamer)
-                print()
+            try:
+                if args.no_stream:
+                    result, stats = generate(
+                        prompt, args, tokenizer, model, device, streamer, show_prompt_in_output=True
+                    )
+                    print(f"GENERATION:\n{result}")
+                else:
+                    print("GENERATION:")
+                    result, stats = generate(prompt, args, tokenizer, model, device, streamer)
+                    print()
 
-            if args.verbose:
-                print_stats(stats)
+                if args.verbose:
+                    print_stats(stats)
+            except KeyboardInterrupt:
+                print("\n\n[Generation interrupted]")
+            except Exception as exc:
+                print(f"Error during generation: {exc}")
 
             print("-" * 70)
 
         except KeyboardInterrupt:
             print("\n\nGoodbye!")
             break
-        except Exception as exc:
-            print(f"Error during generation: {exc}")
 
 
 if __name__ == "__main__":

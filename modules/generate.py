@@ -4,10 +4,47 @@ import torch
 from transformers import TextStreamer
 
 
+class FilteredTextStreamer(TextStreamer):
+    """TextStreamer that stops printing when it encounters stop strings."""
+    
+    def __init__(self, tokenizer, skip_prompt=True, skip_special_tokens=True):
+        super().__init__(tokenizer, skip_prompt=skip_prompt, skip_special_tokens=skip_special_tokens)
+        self.stop_strings = [
+            "\nUser:", "\nHuman:", "\nAssistant:",
+            ".User:", ".Human:", ".Assistant:",
+            "!User:", "!Human:", "!Assistant:",
+            "?User:", "?Human:", "?Assistant:",
+            " User:", " Human:", " Assistant:",
+            "User:", "Human:", "Assistant:",
+        ]
+        self.text_buffer = ""
+        self.stopped = False
+    
+    def on_finalized_text(self, text: str, stream_end: bool = False):
+        """Override to check for stop strings before printing."""
+        if self.stopped:
+            return
+        
+        self.text_buffer += text
+        
+        # Check if any stop string appears in the buffer
+        for stop_str in self.stop_strings:
+            if stop_str in self.text_buffer:
+                # Print only up to the stop string
+                idx = self.text_buffer.index(stop_str)
+                if idx > 0:
+                    print(self.text_buffer[:idx], end="", flush=True)
+                self.stopped = True
+                return
+        
+        # No stop string found, print the text
+        print(text, end="", flush=True)
+
+
 def make_streamer(tokenizer, no_stream):
     if no_stream:
         return None
-    return TextStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
+    return FilteredTextStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
 
 
 def generate(prompt, args, tokenizer, model, device, streamer, show_prompt_in_output=False):
@@ -43,6 +80,8 @@ def generate(prompt, args, tokenizer, model, device, streamer, show_prompt_in_ou
                 ".User:", ".Human:", ".Assistant:",
                 "!User:", "!Human:", "!Assistant:",
                 "?User:", "?Human:", "?Assistant:",
+                " User:", " Human:", " Assistant:",
+                "User:", "Human:", "Assistant:",
                 "<|im_end|>", "</s>"
             ],
         )
@@ -65,6 +104,20 @@ def generate(prompt, args, tokenizer, model, device, streamer, show_prompt_in_ou
     result = None
     if args.no_stream or show_prompt_in_output:
         result = tokenizer.decode(output[0], skip_special_tokens=True)
+        
+        # Remove any stop strings that may have been included in the output
+        stop_strings = [
+            "\nUser:", "\nHuman:", "\nAssistant:",
+            ".User:", ".Human:", ".Assistant:",
+            "!User:", "!Human:", "!Assistant:",
+            "?User:", "?Human:", "?Assistant:",
+            " User:", " Human:", " Assistant:",
+            "User:", "Human:", "Assistant:",
+        ]
+        for stop_str in stop_strings:
+            if stop_str in result:
+                result = result[:result.index(stop_str)]
+                break
 
     return result, stats
 
