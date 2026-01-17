@@ -73,6 +73,12 @@ python run_hf_model.py huihui-ai/Qwen2.5-32B-Instruct-abliterated --quantize int
 
 # 4-bit quantization (~75% VRAM reduction)
 python run_hf_model.py huihui-ai/Qwen2.5-32B-Instruct-abliterated --quantize int4
+
+# NormalFloat 4-bit (better quality than int4, same VRAM)
+python run_hf_model.py huihui-ai/Qwen2.5-32B-Instruct-abliterated --quantize nf4
+
+# Float 4-bit
+python run_hf_model.py huihui-ai/Qwen2.5-32B-Instruct-abliterated --quantize fp4
 ```
 
 ## Command-Line Options
@@ -91,7 +97,7 @@ python run_hf_model.py huihui-ai/Qwen2.5-32B-Instruct-abliterated --quantize int
 - `--cpu` - Force CPU usage (default: use CUDA if available)
 - `--gpu` - GPU device(s) to use. Single GPU: `0` or `1`. Multiple GPUs: `0,1` (default: `0`)
 - `--fp32` - Use FP32 instead of FP16 (default: FP16 on GPU)
-- `--quantize {int4,int8}` - Quantize model to reduce VRAM usage (requires bitsandbytes)
+- `--quantize {int4,int8,nf4,fp4}` - Quantize model to reduce VRAM usage (requires bitsandbytes)
 
 ### Output
 - `--no-stream` - Disable streaming output (default: stream tokens in real-time)

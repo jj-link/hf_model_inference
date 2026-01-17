@@ -41,6 +41,18 @@ def load_model(model_path, is_local_path, device, dtype, gpu_ids, quantize):
     elif quantize == "int4":
         model_kwargs["quantization_config"] = BitsAndBytesConfig(load_in_4bit=True)
         model_kwargs["device_map"] = {"": device} if len(gpu_ids) == 1 else "auto"
+    elif quantize == "nf4":
+        model_kwargs["quantization_config"] = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_quant_type="nf4"
+        )
+        model_kwargs["device_map"] = {"": device} if len(gpu_ids) == 1 else "auto"
+    elif quantize == "fp4":
+        model_kwargs["quantization_config"] = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_quant_type="fp4"
+        )
+        model_kwargs["device_map"] = {"": device} if len(gpu_ids) == 1 else "auto"
     else:
         model_kwargs["torch_dtype"] = dtype
         if len(gpu_ids) == 1:

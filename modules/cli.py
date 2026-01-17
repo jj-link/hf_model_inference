@@ -79,11 +79,12 @@ Examples:
     parser.add_argument(
         "--quantize",
         type=str,
-        choices=["int4", "int8"],
+        choices=["int4", "int8", "nf4", "fp4"],
         default=None,
         help=(
             "Quantize model to reduce VRAM usage (requires bitsandbytes). "
-            "Options: int4 (~75% reduction), int8 (~50% reduction)"
+            "Options: int4 (~75% reduction), int8 (~50% reduction), "
+            "nf4 (4-bit NormalFloat, better quality), fp4 (4-bit Float)"
         ),
     )
 
