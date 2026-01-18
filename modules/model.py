@@ -53,7 +53,7 @@ def load_model(model_path, is_local_path, device, dtype, gpu_ids, quantize):
             bnb_4bit_quant_type="fp4"
         )
         model_kwargs["device_map"] = {"": device} if len(gpu_ids) == 1 else "auto"
-    else:
+    elif quantize in ["fp16", "fp32"] or quantize is None:
         model_kwargs["torch_dtype"] = dtype
         if len(gpu_ids) == 1:
             model_kwargs["device_map"] = {"": device}

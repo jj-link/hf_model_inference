@@ -37,7 +37,18 @@ def select_device(args):
         gpu_ids = [0]
 
     device = f"cuda:{gpu_ids[0]}"
-    dtype = torch.float32 if args.fp32 else torch.float16
+    
+    # Determine dtype based on quantize argument
+    if args.quantize == "fp32":
+        dtype = torch.float32
+    elif args.quantize == "fp16":
+        dtype = torch.float16
+    elif args.quantize in ["int4", "int8", "nf4", "fp4"]:
+        # Quantized models don't use dtype directly
+        dtype = None
+    else:
+        # Default to fp16 on GPU
+        dtype = torch.float16
 
     if len(gpu_ids) == 1:
         print(f"Using GPU {gpu_ids[0]}: {torch.cuda.get_device_name(gpu_ids[0])}")

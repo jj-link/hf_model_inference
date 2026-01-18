@@ -71,20 +71,15 @@ Examples:
     )
 
     parser.add_argument(
-        "--fp32",
-        action="store_true",
-        help="Use FP32 instead of FP16 (default: FP16 on GPU)",
-    )
-
-    parser.add_argument(
         "--quantize",
         type=str,
-        choices=["int4", "int8", "nf4", "fp4"],
+        choices=["int4", "int8", "nf4", "fp4", "fp16", "fp32"],
         default=None,
         help=(
-            "Quantize model to reduce VRAM usage (requires bitsandbytes). "
-            "Options: int4 (~75% reduction), int8 (~50% reduction), "
-            "nf4 (4-bit NormalFloat, better quality), fp4 (4-bit Float)"
+            "Model precision/quantization. "
+            "Options: int4 (~75%% VRAM reduction), int8 (~50%% reduction), "
+            "nf4 (4-bit NormalFloat, better quality), fp4 (4-bit Float), "
+            "fp16 (half precision, default on GPU), fp32 (full precision)"
         ),
     )
 
