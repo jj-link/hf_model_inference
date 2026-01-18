@@ -1,6 +1,26 @@
 #!/usr/bin/env bash
 # HuggingFace Model Inference Setup Script (Linux/WSL)
 # Creates a virtual environment and installs all required dependencies
+#
+# IMPORTANT: This script must be sourced to activate the virtual environment
+# Run with: source ./setup.sh  OR  . ./setup.sh
+
+# Check if script is being sourced
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    echo "========================================"
+    echo "ERROR: Script Not Sourced"
+    echo "========================================"
+    echo ""
+    echo "This script must be sourced to activate the virtual environment."
+    echo ""
+    echo "Run it like this:"
+    echo "  source ./setup.sh"
+    echo ""
+    echo "OR:"
+    echo "  . ./setup.sh"
+    echo ""
+    exit 1
+fi
 
 set -u
 
@@ -219,11 +239,10 @@ echo "========================================"
 echo "Setup Complete!"
 echo "========================================"
 echo
-echo "To run a model:"
+echo "To activate the virtual environment and run a model:"
+echo "  source venv/bin/activate"
 echo "  python run_hf_model.py haykgrigorian/TimeCapsuleLLM-v2-llama-1.2B"
 echo
-echo "To activate the virtual environment in a new terminal:"
-echo "  source venv/bin/activate"
-echo
-echo "To deactivate the virtual environment:"
+echo "To deactivate when done:"
 echo "  deactivate"
+echo
