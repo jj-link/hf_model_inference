@@ -37,6 +37,13 @@ ENV/
 .coverage
 htmlcov/
 
+# Model files and cache
+*.bin
+*.safetensors
+*.gguf
+offload/
+.cache/
+
 # OS
 .DS_Store
 Thumbs.db

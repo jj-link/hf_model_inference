@@ -84,6 +84,16 @@ Examples:
     )
 
     parser.add_argument(
+        "--max-memory",
+        type=int,
+        default=None,
+        help=(
+            "Max GPU memory per device in GB for multi-GPU loading. "
+            "Use less than total VRAM to leave headroom (e.g., 14 for 16GB cards)"
+        ),
+    )
+
+    parser.add_argument(
         "--no-stream",
         action="store_true",
         help="Disable streaming output (default: stream tokens in real-time)",
