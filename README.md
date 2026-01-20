@@ -57,6 +57,18 @@ python run_hf_model.py meta-llama/Llama-2-7b-chat-hf
 python run_hf_model.py "C:\path\to\your\local\model"
 ```
 
+**GGUF models** (automatically detected):
+```powershell
+# From HuggingFace (model ID with 'gguf' in name)
+python run_hf_model.py TheBloke/Llama-2-7B-Chat-GGUF
+
+# Local GGUF file
+python run_hf_model.py "C:\path\to\model.gguf"
+
+# Directory containing GGUF files (auto-selects best quantization)
+python run_hf_model.py "C:\path\to\gguf\models"
+```
+
 **Use specific GPU**:
 ```powershell
 # Single GPU (GPU 1)

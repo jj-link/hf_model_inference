@@ -1,12 +1,17 @@
 # Core dependencies
-torch>=2.0.0
 transformers>=4.30.0
+torch>=2.0.0
 accelerate>=0.20.0
 huggingface_hub>=0.16.0
-hf_xet
 
 # Quantization support (optional, requires CUDA)
 bitsandbytes>=0.41.0
+
+# GGUF model support
+llama-cpp-python>=0.2.0
+
+# Optimized downloads from Xet Storage enabled repos
+hf_xet
 
 # Testing
 pytest>=7.0.0
