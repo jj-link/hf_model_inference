@@ -49,7 +49,11 @@ def load_model(model_path, is_local_path, device, dtype, gpu_ids, quantize, max_
                 total_vram_gb = torch.cuda.get_device_properties(gpu_id).total_memory / 1024**3
                 usable_vram_gb = int(total_vram_gb - 2)  # Leave 2GB headroom
                 max_memory[gpu_id] = f"{usable_vram_gb}GiB"
-        max_memory["cpu"] = "64GiB"  # Allow CPU offload as fallback
+        # Auto-detect system RAM and leave 8GB headroom for OS
+        import psutil
+        total_ram_gb = psutil.virtual_memory().total / 1024**3
+        usable_ram_gb = int(total_ram_gb - 8)  # Leave 8GB for OS
+        max_memory["cpu"] = f"{usable_ram_gb}GiB"
         model_kwargs["max_memory"] = max_memory
         model_kwargs["offload_folder"] = "offload"  # Enable disk offload
         print(f"Max memory per GPU: {max_memory}")
