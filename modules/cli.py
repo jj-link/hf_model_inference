@@ -4,6 +4,7 @@ import argparse
 def build_parser():
     parser = argparse.ArgumentParser(
         description="Run any HuggingFace text generation model locally",
+        usage="python %(prog)s <model_id> [options]",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
